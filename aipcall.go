@@ -88,16 +88,16 @@ func PingCall() string {
 	return x
 }
 
-func (GB *GormDB)VerifyCall() CommonResponse {
+func (GB *GormDB)VerifyCall() CheckRes {
 	res := GB.GetFileRes()
 	fmt.Println("This is the res in Verify: ",res)
 	fmt.Println("This is the GB.CheckResInDB(): ",GB.CheckResInDB())
 	res.RegularCheck = GB.CheckResInDB()
 	res.GetResTime = GetCurrentTime()
-	response := CommonResponse{
-		Data: res,
-	}
-    return response
+	//response := CommonResponse{
+	//	Data: res,
+	//}
+    return res
 }
 
 //for offline, generate the client id for the offline register

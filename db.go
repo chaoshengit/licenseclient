@@ -238,7 +238,7 @@ func (GB *GormDB) UpdateUseState(client string) (error) {
 	    tx.Rollback()
 	    return err
 	}
-    if err := GB.PgClient.Model(IdInfo{}).Where("id_a = ? and used = false",client).Update("used","t").Error; err != nil {
+    if err := tx.Model(IdInfo{}).Where("id_a = ? and used = false",client).Update("used","t").Error; err != nil {
         tx.Rollback()
         return err
     }

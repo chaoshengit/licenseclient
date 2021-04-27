@@ -216,7 +216,7 @@ func (PGDB *GormDB)VerifyClusterCode(data string) (OK string) {
 		return BlankString
 	}
 	fmt.Println("This is the res.T :",res.T)
-	if res.T < GetCurrentTime() {
+	if res.T <= GetCurrentTime() {
 		fmt.Println("555555555555")
 		return OKString
 	}
@@ -526,7 +526,8 @@ func SendHeartBeat() {
 
 //Tool func: This is the interface to regular check id_infos table
 func LicenseCheck(db *GormDB) {
-	ticker := time.NewTicker(1 * TDuration * time.Second)
+    //fmt.Printf("This is the type of duration: %T",TDuration)
+	ticker := time.NewTicker(5 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		logrus.Println("Regular check begin")
@@ -539,7 +540,7 @@ func LicenseCheck(db *GormDB) {
 
 //Tool func: This is the interface to regular check id_infos table
 func LicenseUpdate(db *GormDB) {
-	ticker := time.NewTicker(2 * TDuration * time.Second)
+	ticker := time.NewTicker(10 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		logrus.Println("Regular update begin")
@@ -553,7 +554,7 @@ func LicenseUpdate(db *GormDB) {
 
 //Tool func: This is the interface to send license heartbeat
 func LicenseHBSend() {
-	ticker := time.NewTicker(2 * TDuration * time.Second)
+	ticker := time.NewTicker(10 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		SendHeartBeat()
