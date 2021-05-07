@@ -15,6 +15,9 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"crypto/sha256"
+    "encoding/hex"
+    "io"
 )
 
 
@@ -64,18 +67,18 @@ func GenRcode(sn string) string {
 }
 
 //Verify the legality for the auth Certification file
-func (PGDB *GormDB)GetFileRes() CheckRes {
+func GetFileRes(PGDB *GormDB) CheckRes {
 	tres := CheckRes{
 		Value: true,
 	}
 	fres := CheckRes{
 		Value: false,
 	}
-	result,_ := PathExists(FilePath)
-	if ! result {
-		return fres
-	}
-	err,data := ReadAndDecryptFile(FilePath)
+	//result,_ := PathExists(FilePath)
+	//if ! result {
+	//	return fres
+	//}
+	err,data := PGDB.ReadAndDecryptFile(FilePath)
 	if err != nil {
 		return fres
 	}
@@ -87,8 +90,9 @@ func (PGDB *GormDB)GetFileRes() CheckRes {
 	//following print only for test. after test, need to be deleted
 	fmt.Println("this is the result of VerifyData",res)
 	if res == TrueString {
-        _ = PGDB.UpdateUseState(data.ClusterCode)
+        //_ = PGDB.UpdateUseState(data.ClusterCode)
         tres.PartNumber = data.PartNumber
+        tres.HashList   = data.HashList
 		return tres
 	}
 	return fres
@@ -143,15 +147,41 @@ func ReadFile(licensepath string) (error,EncryptedBody){
 	return nil, dfile
 }
 
-func ReadAndDecryptFile(path string) (error, FileResult) {
-	var resultLicense FileResult
-	err,encryptdata := ReadFile(path)
+func (PGDB *GormDB)checkLicInDB() (error,EncryptedBody) {
+	var dcontent EncryptedBody
+	err,result := PGDB.GetCRecord()
 	if err != nil {
-		return err,FileResult{}
+		fmt.Println("Obtain the content error")
+		return err,EncryptedBody{}
 	}
+	dcontent = EncryptedBody{
+		EncryptedData: result.Content,
+		Signature: result.Sig,
+	}
+	return nil,dcontent
 
-	data := encryptdata.EncryptedData
-	signature := encryptdata.Signature
+}
+
+func (GB *GormDB)ReadAndDecryptFile(path string) (error, FileResult) {
+	var resultLicense FileResult
+	var data,signature string
+	exist, _ := PathExists(FilePath)
+	if ! exist {
+		err, result := GB.checkLicInDB()
+		if err != nil {
+			return err,FileResult{}
+		}
+		data = result.EncryptedData
+		signature = result.Signature
+	} else {
+		err,encryptdata := ReadFile(path)
+		if err != nil {
+			return err,FileResult{}
+		}
+		data = encryptdata.EncryptedData
+		signature = encryptdata.Signature
+	}
+	
 	err1 := RSAVerify([]byte(data),signature)
 	if err1 != nil {
 		logrus.Println("Verify the signature failed.")
@@ -467,7 +497,7 @@ func CheckConnect() bool {
 	client := http.Client{
 		Timeout: timeout,
 	}
-	_, err := client.Get("https://www.baidu.com")
+	_, err := client.Get("http://www.msftconnecttest.com/connecttest.txt")
 	if err != nil {
 		fmt.Println("The connection error between client and server, ",err.Error())
 		return false
@@ -476,12 +506,12 @@ func CheckConnect() bool {
 }
 
 //Send heart beat to license server
-func SendHeartBeat() {
+func (GB *GormDB)SendHeartBeat() {
     fmt.Println("Begin to send the heartbeat.")
 	if ! CheckConnect() {
 		return
 	}
-	err,data := ReadAndDecryptFile(FilePath)
+	err,data := GB.ReadAndDecryptFile(FilePath)
     if err != nil {
     	fmt.Println("Read file failed")
 		return
@@ -546,18 +576,74 @@ func LicenseUpdate(db *GormDB) {
 		logrus.Println("Regular update begin")
 		if db.CheckC() {
 			db.RegularUpdateC()
-			SendHeartBeat()
+			db.SendHeartBeat()
 		}
 		logrus.Println("Regular update end")
 	}
 }
 
 //Tool func: This is the interface to send license heartbeat
-func LicenseHBSend() {
+func LicenseHBSend(db *GormDB) {
 	ticker := time.NewTicker(10 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		SendHeartBeat()
+		db.SendHeartBeat()
 	}
 }
+
+func ParseResInDB(GB *GormDB) (error, bool) {
+	logrus.Println("Begin to parse the res in db")
+	var ResInfo ResIDInfo
+	var resBool bool
+	err, id := GB.GetCRecord()
+	if err != nil {
+		return err,false
+	}
+
+	resByte, err1 := DecryptByAes(id.IDR)
+	if err1 != nil {
+		return err,false
+	}
+
+	err2 := json.Unmarshal(resByte,&ResInfo)
+	if err2 != nil {
+		return err,false
+	}
+
+	timeDiff := GetCurrentTime() - ResInfo.CurrentTime
+	if  timeDiff > 6 * 24 * 3 * TDuration || timeDiff < 0 {
+	    logrus.Println("Found expired based on the time diff reason")
+		return err,false
+	}
+	if ResInfo.Result == LastTimeBlank || ResInfo.Result == TimeDiffValid {
+		resBool = true
+	} else {
+		resBool = false
+	}
+
+	return nil,resBool
+}
+
+//For license client hash check
+func GetHashRes(path string)  string {
+    file, err := os.Open(path)
+    if err == nil {
+        hashInstance := sha256.New()
+        _, err := io.Copy(hashInstance, file)
+        if err == nil {
+            hashed := hashInstance.Sum(nil)
+            hashString := hex.EncodeToString(hashed)
+            return hashString
+        } else {
+            return BlankString
+        }
+    } else {
+        return BlankString
+    }
+    defer file.Close()
+    return BlankString
+}
+
+
+
 

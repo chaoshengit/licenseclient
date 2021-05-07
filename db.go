@@ -249,3 +249,28 @@ func (GB *GormDB) UpdateUseState(client string) (error) {
     return nil
 }
 
+//update the license content when online register or upload the license file in offline scene
+func (GB *GormDB) UpdateContent(client, content, sig string) (error) {
+    tx := GB.PgClient.Begin()
+	if err := tx.Model(IdInfo{}).Where("used = true").Update("used","f").Error; err != nil {
+	    tx.Rollback()
+	    return err
+	}
+	if err := tx.Model(IdInfo{}).Where("id_a = ?", client).Update("content",content).Update("sig",sig).Update("used","t").Error; err != nil {
+	    tx.Rollback()
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+func (GB *GormDB) RollbackContent(client string) (error) {
+	if err := GB.PgClient.Model(IdInfo{}).Where("id_a = ?", client).Update("content",BlankString).Update("sig",BlankString).Update("used","f").Error; err != nil {
+		logrus.Error("Rollback the content failed")
+		return err
+	}
+	return nil
+}

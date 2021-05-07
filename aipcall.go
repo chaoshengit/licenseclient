@@ -61,22 +61,38 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error,CommonResponse) {
 	if err8 := RemoveFile(FilePath); err8 != nil {
 		logger.Error("Failed to handle the invalid file")
 	}
-
+    
 	if responseServer.Data == nil {
 		logger.Error("Internal error2 ")
 		return errors.New("get plain data error"),CommonResponse{}
 	}
-	err9 := write(responseServer.Data,client)
+	dataRes, _ := responseServer.Data.(map[string]interface{})
+	encryptedData, ok1 := dataRes["encrypteddata"].(string)
+	sigNature, ok2 := dataRes["signature"].(string)
+	if ! ok1 || ! ok2 {
+		logger.Error("The element in dataRes is not the corresponding type++++++++++")
+	}
+	err9 := GB.UpdateContent(client.ClientID,encryptedData,sigNature)
 	if err9 != nil {
-		logger.Error("Internal error3 ")
+	    logger.Error("Internal error3 ")
+		return errors.New(ServerInternalError),CommonResponse{}
+	}
+	fmt.Println("This is the string of the responseServer.Data: ",dataRes)
+	err10 := write(responseServer.Data,client)
+	if err10 != nil {
+		logger.Error("Internal error4 ")
 		return errors.New(ServerInternalError),CommonResponse{}
 	}
 	
-	res := GB.GetFileRes()
+	res := GetFileRes(GB)
 	if ! res.Value {
 		logger.Error("This upload file is in invalid")
 		if err4 := RemoveFile(FilePath); err4 != nil {
 			logger.Error("Failed to handle the invalid file")
+		}
+		//This is a rollback logic, need clear the license data in db also.
+		if err := GB.RollbackContent(client.ClientID); err != nil {
+			return err, CommonResponse{}
 		}
 	}
 
@@ -89,9 +105,9 @@ func PingCall() string {
 }
 
 func (GB *GormDB)VerifyCall() CheckRes {
-	res := GB.GetFileRes()
+	res := GetFileRes(GB)
 	fmt.Println("This is the res in Verify: ",res)
-	fmt.Println("This is the GB.CheckResInDB(): ",GB.CheckResInDB())
+	//fmt.Println("This is the GB.CheckResInDB(): ",GB.CheckResInDB())
 	res.RegularCheck = GB.CheckResInDB()
 	res.GetResTime = GetCurrentTime()
 	//response := CommonResponse{

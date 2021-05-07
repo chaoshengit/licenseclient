@@ -79,6 +79,7 @@ type CheckRes struct {
 	RegularCheck  string `json:"regular_check"`
 	GetResTime    int64  `json:"get_res_time"`
 	PartNumber    string `json:"part_number"`
+	HashList      []string
 }
 
 type FileResult struct {
@@ -90,6 +91,8 @@ type FileResult struct {
 	EffectiveTime string `json:"effictivetime"`
 	ExpiredTime   string `json:"expiredtime"`
 	SeriesNumber  string
+	//For hash check
+	HashList      []string
 	Description   string `json:"description"`
 }
 
@@ -100,6 +103,8 @@ type IdInfo struct {
 	IDR           string
 	Used          bool   //`gorm:"default:'f'"`
 	Method        int8   //`gorm:"default:'0'"`//1:online; 2:offline; 0:unregister
+	Content       string
+	Sig           string
 }
 
 type SNbody struct {
