@@ -626,6 +626,11 @@ func ParseResInDB(GB *GormDB) (error, bool) {
 
 //For license client hash check
 func GetHashRes(path string)  string {
+	res,_ := PathExists(path)
+	if ! res {
+		logrus.Error("The bin file is not exist, please check.")
+		return BlankString
+	}
     file, err := os.Open(path)
     if err == nil {
         hashInstance := sha256.New()
