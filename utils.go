@@ -52,7 +52,7 @@ func SendBadResponse(error error) []byte {
 func GenRcode(sn string) string {
 	c := RC{
 		S: sn,
-		D: os.Getenv("DOMAIN"),
+		D: os.Getenv("SsoExternalDomain"),
 		T: GetCurrentTime(),
 	}
 /*    DT, _ := EncryptByAes([]byte(string(c.T)))
@@ -220,37 +220,37 @@ func (PGDB *GormDB)VerifyClusterCode(data string) (OK string) {
 	var res RC
 	err, records := PGDB.GetCids()
 	if err != nil {
-		logrus.Info("This is the error: ",err.Error())
+		logrus.Info("This is the error when check the client id: ",err.Error())
         return BlankString
 	}
 
 	if ! IsInclude(records,data) {
-		fmt.Println("111111111111")
+		fmt.Println("The clientid may be fake one, please check")
 		return BlankString
 	}
 
 	resByte, err1 := DecryptByAes(data)
 	if err1 != nil {
-		fmt.Println("22222222222")
+		fmt.Println("Falied to decrypt the client id")
         return BlankString
 	}
 
 	err2 := json.Unmarshal(resByte,&res)
 	if err2 != nil {
-		fmt.Println("333333333333")
+		fmt.Println("The data inner client id may be wrong")
 		return BlankString
 	}
 
-	if res.D != os.Getenv("DOMAIN"){
-		fmt.Println("444444444444")
+	if res.D != os.Getenv("SsoExternalDomain"){
+		fmt.Println("The domain is not match")
 		return BlankString
 	}
-	fmt.Println("This is the res.T :",res.T)
+
 	if res.T <= GetCurrentTime() {
-		fmt.Println("555555555555")
 		return OKString
 	}
-		return BlankString
+	fmt.Println("This is the last-current time :",res.T)
+	return BlankString
 }
 //Check the Valid of the file
 func VerifyValid(data string) (OK string) {
@@ -259,9 +259,7 @@ func VerifyValid(data string) (OK string) {
     if err != nil {
     	return BlankString
 	}
-	fmt.Println("This is the T.Unix(): ",T.Unix())
     if T.Unix() - GetCurrentTime() > TDuration {
-		fmt.Println("77777777777")
     	return OKString
 	}
 	return BlankString

@@ -198,7 +198,6 @@ func (GB *GormDB) CheckC() (checkRes bool) {
 }
 
 func (GB *GormDB) GetCids() (err error, ids []string) {
-	fmt.Println("coming GetCids----------")
 	if err = GB.PgClient.Model(IdInfo{}).Pluck("id_a",&ids).Error; err != nil {
 		return
 	}
