@@ -82,7 +82,7 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 	if err != nil {
 		return fres
 	}
-    fmt.Println("This is the data from server: ",data)
+
 	if VerifyEffectiveTime(data.EffectiveTime) != TrueString {
 		return fres
 	}
