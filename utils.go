@@ -43,7 +43,7 @@ func SendBadResponse(error error) []byte {
 		Code: -1,
 		ErrMsg: error.Error(),
 	}
-	logrus.Println(error.Error())
+	logger.Error(error.Error())
 	responseData, _:= json.Marshal(response)
 	return responseData
 }
@@ -55,14 +55,13 @@ func GenRcode(sn string) string {
 		D: os.Getenv("SsoExternalDomain"),
 		T: GetCurrentTime(),
 	}
-/*    DT, _ := EncryptByAes([]byte(string(c.T)))
-	_ = PGDB.insertCtoDB(DT)*/
+
 	Db,_ := json.Marshal(c)
-	clientid, err := EncryptByAes(Db)
+	clientId, err := EncryptByAes(Db)
 	if err != nil {
 		return BlankString
 	}
-	return clientid
+	return clientId
 
 }
 
@@ -74,10 +73,7 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 	fres := CheckRes{
 		Value: false,
 	}
-	//result,_ := PathExists(FilePath)
-	//if ! result {
-	//	return fres
-	//}
+
 	err,data := PGDB.ReadAndDecryptFile(FilePath)
 	if err != nil {
 		return fres
@@ -88,7 +84,7 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 	}
 	res := PGDB.VerifyData(data)
 	//following print only for test. after test, need to be deleted
-	fmt.Println("this is the result of VerifyData",res)
+	logger.Info("This is the result of VerifyData:", res)
 	if res == TrueString {
         //_ = PGDB.UpdateUseState(data.ClusterCode)
         tres.PartNumber = data.PartNumber
@@ -113,15 +109,15 @@ func PathExists(path string) (bool, error) {
 //Tool function: write encrypted content to the Certification file
 func write(LicenseContent interface{}, client RegisterBody) error {
 	//genTime := time.Now().Unix()
-	logrus.Info("This is the file for: ",client.ClientName)
-	fileCheckRes,_  := PathExists(FilePath)
+	logger.Info("This is the file for: ", client.ClientName)
+	fileCheckRes, _  := PathExists(FilePath)
 	if fileCheckRes {return errors.New(FileAlreadyExistError)}
 	LicenseContentB, err1 := json.Marshal(LicenseContent)
 	if err1 != nil {
 		return err1
 	}
 
-	err2 := ioutil.WriteFile(FilePath,LicenseContentB,os.ModeAppend)
+	err2 := ioutil.WriteFile(FilePath, LicenseContentB, os.ModeAppend)
 	if err2 != nil {
 		return err2
 	}
@@ -129,36 +125,36 @@ func write(LicenseContent interface{}, client RegisterBody) error {
 }
 
 //Read the encrypted file in the path
-func ReadFile(licensepath string) (error,EncryptedBody){
+func ReadFile(licensePath string) (error, EncryptedBody){
 	var dfile EncryptedBody
-	logrus.Println("Begin to phrase the license file.")
-	content, err := ioutil.ReadFile(licensepath)
+	logger.Info("Begin to phrase the license file.")
+	content, err := ioutil.ReadFile(licensePath)
 	if err != nil {
-		logrus.Println("read the json file failed",err)
-		return err,EncryptedBody{}
+		logger.Error("Read the json file failed", err.Error())
+		return err, EncryptedBody{}
 	}
 
 	err1 := json.Unmarshal(content, &dfile)
 	if err1 != nil {
-		logrus.Println("Unmarshal the encrypt license failed")
-		return err,EncryptedBody{}
+		logger.Error("Unmarshal the encrypt license failed")
+		return err, EncryptedBody{}
 	}
-	logrus.Println("End to phrase the license file.")
+	logger.Error("End to phrase the license file.")
 	return nil, dfile
 }
 
-func (PGDB *GormDB)checkLicInDB() (error,EncryptedBody) {
-	var dcontent EncryptedBody
-	err,result := PGDB.GetCRecord()
+func (PGDB *GormDB)checkLicInDB() (error, EncryptedBody) {
+	var dContent EncryptedBody
+	err, result := PGDB.GetCRecord()
 	if err != nil {
-		fmt.Println("Obtain the content error")
-		return err,EncryptedBody{}
+		logger.Error("Obtain the content error: ", err.Error())
+		return err, EncryptedBody{}
 	}
-	dcontent = EncryptedBody{
+	dContent = EncryptedBody{
 		EncryptedData: result.Content,
 		Signature: result.Sig,
 	}
-	return nil,dcontent
+	return nil, dContent
 
 }
 
@@ -174,29 +170,29 @@ func (GB *GormDB)ReadAndDecryptFile(path string) (error, FileResult) {
 		data = result.EncryptedData
 		signature = result.Signature
 	} else {
-		err,encryptdata := ReadFile(path)
+		err, encryptData := ReadFile(path)
 		if err != nil {
 			return err,FileResult{}
 		}
-		data = encryptdata.EncryptedData
-		signature = encryptdata.Signature
+		data = encryptData.EncryptedData
+		signature = encryptData.Signature
 	}
 	
-	err1 := RSAVerify([]byte(data),signature)
+	err1 := RSAVerify([]byte(data), signature)
 	if err1 != nil {
-		logrus.Println("Verify the signature failed.")
+		logger.Error("Verify the signature failed: ", err1.Error())
 		return err1, FileResult{}
 	}
 
 	decryptByte, err2 := DecryptByAes(data)
 	if err2 != nil {
-		logrus.Println("Failed to get the license data")
+		logger.Error("Failed to get the license data: ", err2.Error())
 		return err2, FileResult{}
 	}
 
 	err3 := json.Unmarshal(decryptByte,&resultLicense)
 	if err3 != nil {
-		logrus.Println("Unmarshal license failed")
+		logger.Error("Unmarshal license failed: ",err3.Error())
 		return err3, FileResult{}
 	}
 
@@ -208,8 +204,8 @@ func (GB *GormDB)VerifyData(data FileResult) (dataRes string) {
     result1 := GB.VerifyClusterCode(data.ClusterCode)
     result2 := VerifyValid(data.ExpiredTime)
 	//following print only for test. after test, need to be deleted
-	fmt.Println("this is the result of result1: ",result1)
-	fmt.Println("this is the result of result2: ",result2)
+	logger.Info("This is the result of result1: ", result1)
+	logger.Info("This is the result of result2: ", result2)
     if result1 == OKString && result2 == OKString {
     	return "true"
 	}
@@ -220,41 +216,41 @@ func (PGDB *GormDB)VerifyClusterCode(data string) (OK string) {
 	var res RC
 	err, records := PGDB.GetCids()
 	if err != nil {
-		logrus.Info("This is the error when check the client id: ",err.Error())
+		logger.Info("This is the error when check the client id: ", err.Error())
         return BlankString
 	}
 
 	if ! IsInclude(records,data) {
-		fmt.Println("The clientid may be fake one, please check")
+		logger.Error("The client id may be fake one, please check")
 		return BlankString
 	}
 
 	resByte, err1 := DecryptByAes(data)
 	if err1 != nil {
-		fmt.Println("Falied to decrypt the client id")
+		logger.Error("Failed to decrypt the client id")
         return BlankString
 	}
 
-	err2 := json.Unmarshal(resByte,&res)
+	err2 := json.Unmarshal(resByte, &res)
 	if err2 != nil {
-		fmt.Println("The data inner client id may be wrong")
+		logger.Error("The data inner client id may be wrong")
 		return BlankString
 	}
 
 	if res.D != os.Getenv("SsoExternalDomain"){
-		fmt.Println("The domain is not match")
+		logger.Error("The domain is not match")
 		return BlankString
 	}
 
 	if res.T <= GetCurrentTime() {
 		return OKString
 	}
-	fmt.Println("This is the last-current time :",res.T)
+	logger.Info("This is the last-current time :", res.T)
 	return BlankString
 }
 //Check the Valid of the file
 func VerifyValid(data string) (OK string) {
-	fmt.Println("this is the data in VerifyValid: ",data)
+	logger.Info("This is the data in VerifyValid: ", data)
     T,err := time.Parse(GoStandardTime,data)
     if err != nil {
     	return BlankString
@@ -267,15 +263,15 @@ func VerifyValid(data string) (OK string) {
 
 //Check whether current time has exceed the expire time
 func VerifyEffectiveTime(effectTimeStr string) (result string) {
-	fmt.Println("this is the time string :",effectTimeStr)
-	effectTime, err := time.Parse("2006-01-02",effectTimeStr)
+	logger.Info("This is the time string :", effectTimeStr)
+	effectTime, err := time.Parse("2006-01-02", effectTimeStr)
     if err != nil {
-    	logrus.Error("The format of the time str is invalid")
+    	logger.Error("The format of the time str is invalid")
     	return BlankString
 	}
 	diffTime := effectTime.Sub(time.Now()).Hours()/24
 	if diffTime > ToleranceDays {
-		logrus.Info("The client time may have been ")
+		logger.Error("The license has not make effect")
 		return BlankString
 	}
     return TrueString
@@ -313,11 +309,11 @@ func (PGDB *GormDB)RegularUpdateC() {
 	CurrentTimeString := strconv.FormatInt(currentTime,10)
 	DString , err := EncryptByAes([]byte(CurrentTimeString))
 	if err != nil {
-		logrus.Println("There is some issue when deal the idC")
+		logger.Error("There is some issue when deal the idC: ", err.Error())
 	}
 	err1 := PGDB.updateC(DString)
 	if err1 != nil {
-		logrus.Println("There is some issue when deal the idC in DB")
+		logger.Error("There is some issue when deal the idC in DB: ", err1.Error())
 	}
 }
 
@@ -327,7 +323,7 @@ func (PGDB *GormDB)RegularCheckC() {
 	err,id := PGDB.GetCRecord()
 	if err == nil {
 		if id.IdC == BlankString {
-			fmt.Println("IdC value error")
+			logger.Error("IdC value error")
 			return
 		}
 		if id.IdB == BlankString {
@@ -336,26 +332,26 @@ func (PGDB *GormDB)RegularCheckC() {
 				CurrentTime: GetCurrentTime(),
 			}
 			PGDB.MakeResDB(res,id.IdA)
-			fmt.Println("IdB value error")
+			logger.Error("IdB value error")
 			return
 		}
         idBByte, err1 := DecryptByAes(id.IdB)
         if err1 != nil {
-        	fmt.Println("IdB value error1")
+        	logger.Error("IdB value error1")
 		}
         idCByte, err2 := DecryptByAes(id.IdC)
 		if err2 != nil {
-			fmt.Println("IdC value error1")
+			logger.Error("IdC value error1")
 		}
         if err1 == nil && err2 == nil {
         	//here should be a struct including timestamp and result
 			result := CheckValidC(idBByte,idCByte)
-			fmt.Println("This is the check result in RegularCheckC: ",result)
+			logger.Info("This is the check result in RegularCheckC: ", result)
 			res := ResIDInfo{
 				Result: result,
 				CurrentTime: GetCurrentTime(),
 			}
-			PGDB.MakeResDB(res,id.IdA)
+			PGDB.MakeResDB(res, id.IdA)
 		}
 	}
 }
@@ -363,7 +359,7 @@ func (PGDB *GormDB)RegularCheckC() {
 //Check whether the time in idB and idC column is valid
 func CheckValidC(idB ,idC []byte) (checkRes string){
 	//convert a timestamp string to int64
-	lasttime, err1 := strconv.Atoi(string(idB))
+	lastTime, err1 := strconv.Atoi(string(idB))
 	if err1 != nil {
 		return TimeDiffInvalid
 	}
@@ -371,9 +367,9 @@ func CheckValidC(idB ,idC []byte) (checkRes string){
 	if err2 != nil {
 		return TimeDiffInvalid
 	}
-	fmt.Println("This is the last time and current time:",lasttime,"-",current)
+	logger.Info("This is the last time and current time: ", lastTime, "-", current)
 	//Considering Service Interruption scene, the max duration is incalculable,then will not judge it
-    if current - lasttime < MinDuration {
+    if current - lastTime < MinDuration {
     	return TimeDiffInvalid
 	}
 	return TimeDiffValid
@@ -381,14 +377,14 @@ func CheckValidC(idB ,idC []byte) (checkRes string){
 
 //After upload license, if license file is not valid, need to delete it
 func RemoveFile(filePath string) error {
-	commandString := fmt.Sprintf("rm -rf %s",filePath)
+	commandString := fmt.Sprintf("rm -rf %s", filePath)
 	isExist,_ := PathExists(filePath)
 	if ! isExist {return nil}
-	out,err:= exec.Command("/bin/bash","-c",commandString).Output()
+	out,err:= exec.Command("/bin/bash","-c", commandString).Output()
 	if err != nil {
 		return err
 	}
-	fmt.Println("This is out: ",out)
+	logger.Info("This is output for command remove file: ", out)
 	return nil
 }
 
@@ -424,36 +420,32 @@ func (PGDB *GormDB)CheckResInDB() (res string) {
 	resSet := ResultContainer[:]
 	err,idRecord := PGDB.GetCRecord()
 	if err != nil {
-		fmt.Println("It is checkResInDB error")
+		logger.Error("It is checkResInDB error: ", err.Error())
 		return NotOKString
 	}
-
-/*	if idRecord.IDR == "" {
-
-	}*/
 
 	IDRByte, err1 := DecryptByAes(idRecord.IDR)
 	if err1 != nil {
-		fmt.Println("It is checkResInDB error1")
+		logger.Error("It is checkResInDB error1: ", err1.Error())
 		return NotOKString
 	}
-	fmt.Println("This is the IDRByte in CheckResInDB(): ",string(IDRByte))
+	logger.Info("This is the IDRByte in CheckResInDB(): ", string(IDRByte))
 	err2 := json.Unmarshal(IDRByte, &CheckRes)
 	if err2 != nil {
-		fmt.Println("It is checkResInDB error2")
+		logger.Error("It is checkResInDB error2: ", err2.Error())
 		return NotOKString
 	}
-    fmt.Println("This is the CheckRes in CheckResInDB(): ",CheckRes)
+	logger.Info("This is the CheckRes in CheckResInDB(): ", CheckRes)
 	if ! IsInclude(resSet,CheckRes.Result) {
-		fmt.Println("It is checkResInDB error3")
+		logger.Error("It is checkResInDB error3")
 		return NotOKString
 	}
 
 	if ! CompareWithCurrentTime(CheckRes.CurrentTime,ToleranceDays*24*3600) {
-		fmt.Println("It is checkResInDB error4")
+		logger.Error("It is checkResInDB error4")
 		return NotOKString
 	}
-	fmt.Println("this is the CheckRes in function CheckResInDB: ",CheckRes)
+	logger.Info("this is the CheckRes in function CheckResInDB: ", CheckRes)
 	if CheckRes.Result == "true" || CheckRes.Result == "temp" {
 		return OKString
 	}
@@ -464,22 +456,22 @@ func (PGDB *GormDB)CheckResInDB() (res string) {
 func (PGDB *GormDB)MakeResDB(res ResIDInfo, IdA string) {
 	resultByte, err3 := json.Marshal(res)
 	if err3 != nil {
-		logrus.Println("issue happened in check:", err3)
+		logger.Error("issue happened in check:", err3.Error())
 	}
 	result, err4 := EncryptByAes(resultByte)
 	if err4 != nil {
-		logrus.Println("issue happened in check1: ", err4)
+		logger.Error("issue happened in check1: ", err4.Error())
 	}
 	err5 := PGDB.updateResult(result, IdA)
 	if err5 != nil {
-		logrus.Println("issue happened in check2: ", err5)
+		logger.Error("issue happened in check2: ", err5.Error())
 	}
 }
 
 //Tool function: compare the current time with the input time
-func CompareWithCurrentTime(recordTime int64,maxTimeGap int64) bool {
+func CompareWithCurrentTime(recordTime int64, maxTimeGap int64) bool {
 	if GetCurrentTime() - recordTime > maxTimeGap {
-		fmt.Println("The time gap has exceed the max time gap")
+		logger.Error("The time gap has exceed the max time gap")
 		return false
 	}
 	return true
@@ -497,7 +489,7 @@ func CheckConnect() bool {
 	}
 	_, err := client.Get("http://www.msftconnecttest.com/connecttest.txt")
 	if err != nil {
-		fmt.Println("The connection error between client and server, ",err.Error())
+		logger.Error("The connection error between client and server: ", err.Error())
 		return false
 	}
 	return true
@@ -505,13 +497,13 @@ func CheckConnect() bool {
 
 //Send heart beat to license server
 func (GB *GormDB)SendHeartBeat() {
-    fmt.Println("Begin to send the heartbeat.")
+	logger.Info("Begin to send the heartbeat.")
 	if ! CheckConnect() {
 		return
 	}
 	err,data := GB.ReadAndDecryptFile(FilePath)
     if err != nil {
-    	fmt.Println("Read file failed")
+		logger.Error("Read file failed: ", err.Error())
 		return
 	}
 
@@ -520,9 +512,9 @@ func (GB *GormDB)SendHeartBeat() {
     	FileResult: data,
 	}
 	bodyByte,_ := json.Marshal(body)
-	sendString,err1 := EncryptByAes(bodyByte)
+	sendString, err1 := EncryptByAes(bodyByte)
 	if err1 != nil {
-		fmt.Println("error occur when send HB")
+		logger.Error("Error occur when send HB: ", err1.Error())
 		return
 	}
 	sendBody := HBRequestBody{
@@ -532,7 +524,7 @@ func (GB *GormDB)SendHeartBeat() {
 	sendByte, _ := json.Marshal(sendBody)
 	serverIP := os.Getenv("ServerIP")
 	url := serverIP + HeartBeatRequest
-	logger.Info("This is the request url: ",url)
+	logger.Info("This is the request url: ", url)
 	httpClient := &http.Client{}
 	httpClient.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -542,27 +534,26 @@ func (GB *GormDB)SendHeartBeat() {
 
 	req, err3 := http.NewRequest("POST",url,bytes.NewReader(sendByte))
 	if err3 != nil {
-        fmt.Println("Make the new request error: ",err3.Error())
+		logger.Error("Make the new request error: ", err3.Error())
 		return
 	}
 	_, err4 := httpClient.Do(req)
 	if err4 != nil {
-		fmt.Println("Request the server error: ",err4.Error())
+		logger.Error("Request the server error: ", err4.Error())
 		return
 	}
 }
 
 //Tool func: This is the interface to regular check id_infos table
 func LicenseCheck(db *GormDB) {
-    //fmt.Printf("This is the type of duration: %T",TDuration)
 	ticker := time.NewTicker(5 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		logrus.Println("Regular check begin")
+		logger.Info("Regular check begin")
 		if db.CheckC() {
 			db.RegularCheckC()
 		}
-		logrus.Println("Regular check end")
+		logger.Info("Regular check end")
 	}
 }
 
@@ -571,12 +562,12 @@ func LicenseUpdate(db *GormDB) {
 	ticker := time.NewTicker(10 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		logrus.Println("Regular update begin")
+		logger.Info("Regular update begin")
 		if db.CheckC() {
 			db.RegularUpdateC()
 			db.SendHeartBeat()
 		}
-		logrus.Println("Regular update end")
+		logger.Info("Regular update end")
 	}
 }
 
@@ -610,7 +601,7 @@ func ParseResInDB(GB *GormDB) (error, bool) {
 
 	timeDiff := GetCurrentTime() - ResInfo.CurrentTime
 	if  timeDiff > 6 * 24 * 3 * TDuration || timeDiff < 0 {
-	    logrus.Println("Found expired based on the time diff reason")
+		logger.Error("Found expired based on the time diff reason")
 		return err,false
 	}
 	if ResInfo.Result == LastTimeBlank || ResInfo.Result == TimeDiffValid {
@@ -626,10 +617,11 @@ func ParseResInDB(GB *GormDB) (error, bool) {
 func GetHashRes(path string)  string {
 	res,_ := PathExists(path)
 	if ! res {
-		logrus.Error("The bin file is not exist, please check.")
+		logger.Error("The bin file is not exist, please check.")
 		return BlankString
 	}
     file, err := os.Open(path)
+	defer file.Close()
     if err == nil {
         hashInstance := sha256.New()
         _, err := io.Copy(hashInstance, file)
@@ -643,8 +635,6 @@ func GetHashRes(path string)  string {
     } else {
         return BlankString
     }
-    defer file.Close()
-    return BlankString
 }
 
 

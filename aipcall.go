@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/wonderivan/logger"
 	"io/ioutil"
 	"net/http"
@@ -14,21 +13,21 @@ import (
 
 //type dbCli gorm.DB
 
-func (GB *GormDB)RegisterCall(client RegisterBody) (error,CommonResponse) {
+func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	var responseServer CommonResponse
 	//var ResponseBody EncryptedBody
 	client.ClientID = GenRcode(client.RegisterCode)
-	fmt.Println("This is the client id generate at client: ",client.ClientID)
+	logger.Info("This is the client id generate at client: ", client.ClientID)
 	err2 := GB.RecordID(client.ClientID)
 	if err2 != nil {
-		logger.Error("Record ID error: ",err2.Error())
-		return err2,CommonResponse{}
+		logger.Error("Record ID error: ", err2.Error())
+		return err2, CommonResponse{}
 	}
 
 	clientByte, _ := json.Marshal(client)
 	serverIP := os.Getenv("ServerIP")
 	url := serverIP + RegisterRequest
-	logger.Info("This is the request url: ",url)
+	logger.Info("This is the request url: ", url)
 	httpClient := &http.Client{}
 	httpClient.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -36,26 +35,26 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error,CommonResponse) {
 		},
 	}
 
-	req, err3 := http.NewRequest("POST",url,bytes.NewReader(clientByte))
+	req, err3 := http.NewRequest("POST", url, bytes.NewReader(clientByte))
 	if err3 != nil {
-		logger.Error("Request error1: ",err3.Error())
-		return err3,CommonResponse{}
+		logger.Error("Request error1: ", err3.Error())
+		return err3, CommonResponse{}
 	}
 	serverResponse, err4 := httpClient.Do(req)
 	if err4 != nil {
-		logger.Error("Request error2: ",err4.Error())
-		return err4,CommonResponse{}
+		logger.Error("Request error2: ", err4.Error())
+		return err4, CommonResponse{}
 	}
 	result, err5 := ioutil.ReadAll(serverResponse.Body)
-	fmt.Println("This is the online register response data11111: ",string(result))
+	logger.Debug("This is the online register response data: ", string(result))
 	if err5 != nil {
-		logger.Error("Request error3: ",err5.Error())
-		return err5,CommonResponse{}
+		logger.Error("Request error3: ", err5.Error())
+		return err5, CommonResponse{}
 	}
 	err6 := json.Unmarshal(result, &responseServer)
 	if err6 != nil {
-		logger.Error("Internal error1: ",err6.Error())
-		return err6,CommonResponse{}
+		logger.Error("Internal error1: ", err6.Error())
+		return err6, CommonResponse{}
 	}
 
 	if err8 := RemoveFile(FilePath); err8 != nil {
@@ -64,24 +63,24 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error,CommonResponse) {
     
 	if responseServer.Data == nil {
 		logger.Error("Internal error2 ")
-		return errors.New("get plain data error"),CommonResponse{}
+		return errors.New("Get plain data error"), CommonResponse{}
 	}
 	dataRes, _ := responseServer.Data.(map[string]interface{})
 	encryptedData, ok1 := dataRes["encrypteddata"].(string)
 	sigNature, ok2 := dataRes["signature"].(string)
 	if ! ok1 || ! ok2 {
-		logger.Error("The element in dataRes is not the corresponding type++++++++++")
+		logger.Error("The element in dataRes is not the corresponding type")
 	}
-	err9 := GB.UpdateContent(client.ClientID,encryptedData,sigNature)
+	err9 := GB.UpdateContent(client.ClientID, encryptedData, sigNature)
 	if err9 != nil {
 	    logger.Error("Internal error3 ")
-		return errors.New(ServerInternalError),CommonResponse{}
+		return errors.New(ServerInternalError), CommonResponse{}
 	}
-	fmt.Println("This is the string of the responseServer.Data: ",dataRes)
-	err10 := write(responseServer.Data,client)
+	logger.Debug("This is the string of the responseServer.Data: ", dataRes)
+	err10 := write(responseServer.Data, client)
 	if err10 != nil {
 		logger.Error("Internal error4 ")
-		return errors.New(ServerInternalError),CommonResponse{}
+		return errors.New(ServerInternalError), CommonResponse{}
 	}
 	
 	res := GetFileRes(GB)
@@ -106,23 +105,18 @@ func PingCall() string {
 
 func (GB *GormDB)VerifyCall() CheckRes {
 	res := GetFileRes(GB)
-	fmt.Println("This is the res in Verify: ",res)
-	//fmt.Println("This is the GB.CheckResInDB(): ",GB.CheckResInDB())
+	logger.Info("This is the res in Verify: ", res)
 	res.RegularCheck = GB.CheckResInDB()
 	res.GetResTime = GetCurrentTime()
-	//response := CommonResponse{
-	//	Data: res,
-	//}
     return res
 }
 
 //for offline, generate the client id for the offline register
-func (GB *GormDB)GenClientIDCall(sn SNbody) (error,CommonResponse) {
+func (GB *GormDB)GenClientIDCall(sn SNbody) (error, CommonResponse) {
 
 	if ! VerifySN(sn.SN) {
-		fmt.Println("The SN is invalid")
+		logger.Info("The SN is invalid")
 		return errors.New(ClientRequestError), CommonResponse{}
-		//return
 	}
 	ClientID := GenRcode(sn.SN)
 	err2 := GB.RecordID(ClientID)
