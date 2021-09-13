@@ -91,7 +91,6 @@ func (GB *GormDB) GetCRecord() (err error, record IdInfo) {
 //clear all the data in table
 func (GB *GormDB) ClearTable() (err error) {
 	if err = GB.PgClient.Delete(IdInfo{}).Error; err != nil {
-		logger.Error("Operate data failed")
 		return
 	}
 	return

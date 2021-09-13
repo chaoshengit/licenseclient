@@ -16,7 +16,7 @@ import (
 func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	var responseServer CommonResponse
 	//var ResponseBody EncryptedBody
-	client.ClientID = GenRcode(client.RegisterCode)
+	client.ClientID = GenRcodeOnline(client.RegisterCode)
 	logger.Info("This is the client id generate at client: ", client.ClientID)
 	err2 := GB.RecordID(client.ClientID)
 	if err2 != nil {
@@ -118,7 +118,7 @@ func (GB *GormDB)GenClientIDCall(sn SNbody) (error, CommonResponse) {
 		logger.Info("The SN is invalid")
 		return errors.New(ClientRequestError), CommonResponse{}
 	}
-	ClientID := GenRcode(sn.SN)
+	ClientID := GenRcodeOffline()
 	err2 := GB.RecordID(ClientID)
 	if err2 != nil {
 		return err2, CommonResponse{}
@@ -145,5 +145,22 @@ func RemoveCall() error {
 		logger.Error("Remove file error: ", err.Error())
 		return err
 	}
+	return nil
+}
+
+//for deactivate the license for online and offline scene
+//this interface will clear all the local data about license
+//will execute 2 action: clear the local table, remove the license file
+func (GB *GormDB)DeactivateService() error {
+	logger.Info("Begin to deactivate Service")
+	if err := GB.ClearTable(); err != nil {
+		logger.Error("Clear the data in DB failed: ", err.Error())
+		return err
+	}
+	if err2 := RemoveFile(FilePath); err2 != nil {
+		logger.Error("Failed to handle the file, deactivated partially, please check the backend and finish it manually")
+		return err2
+	}
+    logger.Info("End to deactivate Service")
 	return nil
 }

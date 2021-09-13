@@ -5,8 +5,9 @@ import (
 )
 
 const (
-	RegisterRequest          = "/ls/register"
+	RegisterRequest          = "/ls/license/register"
 	HeartBeatRequest         = "/ls/handshake"
+	HeartBeatPingRequest     = "/ping"
 	BlankString              = ""
 	LastTimeBlank            = "temp"
 	TimeDiffValid            = "true"
@@ -25,6 +26,9 @@ const (
 	ServerInternalError      = "the internal server error"
 	ClientRequestError       = "the client request error"
 	GoStandardTime           = "2006-01-02"
+	LicenseEnableStatus      = "enable"
+	LicenseDisableStatus     = "disable"
+	LicenseMidStatus         = "midStatus"
 	Kstring                  = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC8uMnRS01tpRWG1URGmEfYoJgy
 9ZOZ56euqsBrsoFX0Bf9lyr0wlXNo4v2HE5tg1+NdZb7yQ0eUT+l9aNYdQwt8Hta
@@ -68,10 +72,16 @@ type ServerResponse struct {
 }
 
 //RC : register code
-type RC struct {
-	S             string    //sn
-	D             string    //domain
-	T             int64     //current time
+type RCOnline struct {
+	S             string    //This is the SN get from server end
+	D             string    //This is the Domain which get from client end, the corresponding ENV key is SsoExternalDomain
+	//T             int64     //current time
+}
+
+type RCOffline struct {
+	//S             string    //This is the SN get from server end
+	D             string    //This is the Domain which get from client end, the corresponding ENV key is SsoExternalDomain
+	//T             int64     //current time
 }
 
 type CheckRes struct {
@@ -86,6 +96,7 @@ type FileResult struct {
 	LicenseName   string `json:"licensename"`
 	CustomerName  string `json:"customname"`
 	ClusterCode   string `json:"clustercode"`
+	ClientDomain  string `json:"clientdomain"`
 	PartNumber    string `json:"partnumber"`
 	Version       string `json:"version"`
 	EffectiveTime string `json:"effictivetime"`
@@ -124,4 +135,13 @@ type HeartBeatBody struct {
 
 type HBRequestBody struct {
 	Data          string
+}
+
+type HBReturnBody  struct {
+	Data          string
+}
+
+type HeartBeatResponse struct {
+	ClientID      string //
+	LicenseStatus string
 }

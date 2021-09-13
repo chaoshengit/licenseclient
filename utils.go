@@ -48,12 +48,28 @@ func SendBadResponse(error error) []byte {
 	return responseData
 }
 
-//generate the client id
-func GenRcode(sn string) string {
-	c := RC{
+//generate the client id online
+func GenRcodeOnline(sn string) string {
+	c := RCOnline{
 		S: sn,
 		D: os.Getenv("SsoExternalDomain"),
-		T: GetCurrentTime(),
+		//T: GetCurrentTime(),
+	}
+
+	Db,_ := json.Marshal(c)
+	clientId, err := EncryptByAes(Db)
+	if err != nil {
+		return BlankString
+	}
+	return clientId
+
+}
+//generate the client id online
+func GenRcodeOffline() string {
+	c := RCOffline{
+		//S: sn,
+		D: os.Getenv("SsoExternalDomain"),
+		//T: GetCurrentTime(),
 	}
 
 	Db,_ := json.Marshal(c)
@@ -201,7 +217,7 @@ func (GB *GormDB)ReadAndDecryptFile(path string) (error, FileResult) {
 
 //Check whole data in file
 func (GB *GormDB)VerifyData(data FileResult) (dataRes string) {
-    result1 := GB.VerifyClusterCode(data.ClusterCode)
+    result1 := GB.VerifyClusterCode(data.ClusterCode, data.ClientDomain)
     result2 := VerifyValid(data.ExpiredTime)
 	//following print only for test. after test, need to be deleted
 	logger.Info("This is the result of result1: ", result1)
@@ -211,42 +227,56 @@ func (GB *GormDB)VerifyData(data FileResult) (dataRes string) {
 	}
 	return "false"
 }
-//Check the Cluster Code
-func (PGDB *GormDB)VerifyClusterCode(data string) (OK string) {
-	var res RC
+//Check the Cluster Code and the domain
+func (PGDB *GormDB)VerifyClusterCode(clientID, clientDomain string) (OK string) {
+	var resON RCOnline
+	var resOff RCOffline
+	var OnRes, OffRes = true, true
 	err, records := PGDB.GetCids()
 	if err != nil {
 		logger.Info("This is the error when check the client id: ", err.Error())
         return BlankString
 	}
 
-	if ! IsInclude(records,data) {
+	if ! IsInclude(records, clientID) {
 		logger.Error("The client id may be fake one, please check")
 		return BlankString
 	}
 
-	resByte, err1 := DecryptByAes(data)
+	resByte, err1 := DecryptByAes(clientID)
 	if err1 != nil {
 		logger.Error("Failed to decrypt the client id")
         return BlankString
 	}
 
-	err2 := json.Unmarshal(resByte, &res)
+	err2 := json.Unmarshal(resByte, &resON)
 	if err2 != nil {
-		logger.Error("The data inner client id may be wrong")
+		logger.Error("The data inner client id online may be wrong")
+		OnRes = false
+	}
+
+	err3 := json.Unmarshal(resByte, &resOff)
+	if err3 != nil {
+		logger.Error("The data inner client id offline may be wrong")
+		OffRes = false
+	}
+
+	if !OnRes && !OffRes {
+		logger.Error("The data inner client id offline may be wrong")
 		return BlankString
 	}
 
-	if res.D != os.Getenv("SsoExternalDomain"){
+	if clientDomain != os.Getenv("SsoExternalDomain"){
 		logger.Error("The domain is not match")
 		return BlankString
 	}
 
-	if res.T <= GetCurrentTime() {
+/*	if res.T <= GetCurrentTime() {
 		return OKString
 	}
 	logger.Info("This is the last-current time :", res.T)
-	return BlankString
+	return BlankString*/
+    return OKString
 }
 //Check the Valid of the file
 func VerifyValid(data string) (OK string) {
@@ -307,7 +337,7 @@ func (PGDB *GormDB)RegularUpdateC() {
 	currentTime := GetCurrentTime()
 	//convert an int64 timestamp number to string for decrypt
 	CurrentTimeString := strconv.FormatInt(currentTime,10)
-	DString , err := EncryptByAes([]byte(CurrentTimeString))
+	DString, err := EncryptByAes([]byte(CurrentTimeString))
 	if err != nil {
 		logger.Error("There is some issue when deal the idC: ", err.Error())
 	}
@@ -436,7 +466,7 @@ func (PGDB *GormDB)CheckResInDB() (res string) {
 		return NotOKString
 	}
 	logger.Info("This is the CheckRes in CheckResInDB(): ", CheckRes)
-	if ! IsInclude(resSet,CheckRes.Result) {
+	if ! IsInclude(resSet, CheckRes.Result) {
 		logger.Error("It is checkResInDB error3")
 		return NotOKString
 	}
@@ -482,12 +512,13 @@ func GetCurrentTime() int64{
 }
 
 //Check connection between client with server
-func CheckConnect() bool {
+func CheckConnect(serverIP string) bool {
 	timeout := time.Duration(5 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}
-	_, err := client.Get("http://www.msftconnecttest.com/connecttest.txt")
+	_, err := client.Get(serverIP + HeartBeatPingRequest)
+	//_, err := client.Get("http://www.msftconnecttest.com/connecttest.txt")
 	if err != nil {
 		logger.Error("The connection error between client and server: ", err.Error())
 		return false
@@ -496,17 +527,20 @@ func CheckConnect() bool {
 }
 
 //Send heart beat to license server
-func (GB *GormDB)SendHeartBeat() {
+func (GB *GormDB)SendHeartBeat() string {
 	logger.Info("Begin to send the heartbeat.")
-	if ! CheckConnect() {
-		return
+	var responseBody HBReturnBody
+	var responseData HeartBeatResponse
+	serverIP := os.Getenv("ServerIP")
+	if ! CheckConnect(serverIP) {
+		logger.Error("Stop to send the heartbeat")
+		return LicenseMidStatus
 	}
 	err,data := GB.ReadAndDecryptFile(FilePath)
     if err != nil {
-		logger.Error("Read file failed: ", err.Error())
-		return
+		logger.Error("Stop to send heartbeat because read file failed error: ", err.Error())
+		return LicenseMidStatus
 	}
-
 	body := HeartBeatBody{
     	SendTime: GetCurrentTime(),
     	FileResult: data,
@@ -514,34 +548,64 @@ func (GB *GormDB)SendHeartBeat() {
 	bodyByte,_ := json.Marshal(body)
 	sendString, err1 := EncryptByAes(bodyByte)
 	if err1 != nil {
-		logger.Error("Error occur when send HB: ", err1.Error())
-		return
+		logger.Error("Stop to send heartbeat because error: ", err1.Error())
+		return LicenseMidStatus
 	}
 	sendBody := HBRequestBody{
 		Data: sendString,
 	}
-
 	sendByte, _ := json.Marshal(sendBody)
-	serverIP := os.Getenv("ServerIP")
 	url := serverIP + HeartBeatRequest
-	logger.Info("This is the request url: ", url)
+	//The log need to be delete after debug
+	logger.Info("This is the request url for heartbeat: ", url)
 	httpClient := &http.Client{}
 	httpClient.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
 	}
-
-	req, err3 := http.NewRequest("POST",url,bytes.NewReader(sendByte))
+	req, err3 := http.NewRequest(http.MethodGet, url, bytes.NewReader(sendByte))
 	if err3 != nil {
 		logger.Error("Make the new request error: ", err3.Error())
-		return
+		return LicenseMidStatus
 	}
-	_, err4 := httpClient.Do(req)
+	responseHB, err4 := httpClient.Do(req)
+	defer responseHB.Body.Close()
 	if err4 != nil {
 		logger.Error("Request the server error: ", err4.Error())
-		return
+		return LicenseMidStatus
 	}
+	responseHBByte, err5 := ioutil.ReadAll(responseHB.Body)
+	if err5 != nil {
+		logger.Error("Get the server response error: ", err5.Error())
+		return LicenseMidStatus
+	}
+	err6 := json.Unmarshal(responseHBByte, &responseBody)
+	if err6 != nil {
+		logger.Error("Parse the server response data error: ", err6.Error())
+		return LicenseMidStatus
+	}
+	//This step can prepare for the action for the bad data from server end
+	dataByte, err7 := DecryptByAes(responseBody.Data)
+	if err7 != nil {
+		logger.Error("Can not parse the data error: ", err7.Error())
+		return LicenseMidStatus
+	}
+	err8 := json.Unmarshal(dataByte, &responseData)
+	if err8 != nil {
+		logger.Error("Parse the server response data error: ", err8.Error())
+		return LicenseMidStatus
+	}
+	err9, result := GB.GetCRecord()
+	if err9 != nil {
+		logger.Error("Get client id form local database error: ", err9.Error())
+		return LicenseMidStatus
+	}
+    if responseData.ClientID != result.IdA {
+		logger.Error("Get mismatch client id form local database")
+		return LicenseMidStatus
+	}
+	return responseData.LicenseStatus
 }
 
 //Tool func: This is the interface to regular check id_infos table
@@ -558,17 +622,20 @@ func LicenseCheck(db *GormDB) {
 }
 
 //Tool func: This is the interface to regular check id_infos table
-func LicenseUpdate(db *GormDB) {
+func LicenseUpdate(db *GormDB) string {
 	ticker := time.NewTicker(10 * TDuration * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		logger.Info("Regular update begin")
 		if db.CheckC() {
 			db.RegularUpdateC()
-			db.SendHeartBeat()
+			status := db.SendHeartBeat()
+			logger.Info("Regular update end")
+			return status
 		}
-		logger.Info("Regular update end")
 	}
+	logger.Info("Regular update end")
+	return LicenseMidStatus
 }
 
 //Tool func: This is the interface to send license heartbeat
