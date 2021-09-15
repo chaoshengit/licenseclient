@@ -114,10 +114,10 @@ func (GB *GormDB)VerifyCall() CheckRes {
 //for offline, generate the client id for the offline register
 func (GB *GormDB)GenClientIDCall(sn SNbody) (error, CommonResponse) {
 
-	if ! VerifySN(sn.SN) {
+/*	if ! VerifySN(sn.SN) {
 		logger.Info("The SN is invalid")
 		return errors.New(ClientRequestError), CommonResponse{}
-	}
+	}*/
 	ClientID := GenRcodeOffline()
 	err2 := GB.RecordID(ClientID)
 	if err2 != nil {
