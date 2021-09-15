@@ -426,6 +426,8 @@ func RemoveFile(filePath string) error {
 	isExist,_ := PathExists(filePath)
 	if ! isExist {return nil}
 	out,err:= exec.Command("/bin/bash","-c", commandString).Output()*/
+	isExist,_ := PathExists(filePath)
+	if ! isExist {return nil}
 	if err := os.Remove(filePath); err!= nil {
 		return err
 	}
