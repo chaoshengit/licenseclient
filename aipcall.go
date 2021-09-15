@@ -58,7 +58,7 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	}
 
 	if err8 := RemoveFile(FilePath); err8 != nil {
-		logger.Error("Failed to handle the invalid file")
+		logger.Error("Failed to handle the previous invalid license file.")
 	}
     
 	if responseServer.Data == nil {

@@ -2,22 +2,20 @@ package licenseclient
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/wonderivan/logger"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"time"
-	"crypto/sha256"
-    "encoding/hex"
-    "io"
 )
 
 
@@ -309,6 +307,9 @@ func VerifyEffectiveTime(effectTimeStr string) (result string) {
 
 //record the first id record into db
 func (PGDB *GormDB)RecordID(IDA string) (err error) {
+	if err := PGDB.ClearHistory(IDA); err != nil {
+		return err
+	}
 	currentTime := GetCurrentTime()
 	CurrentTimeString := strconv.FormatInt(currentTime,10)
 	DString, err1 := EncryptByAes([]byte(CurrentTimeString))
@@ -329,6 +330,17 @@ func (PGDB *GormDB)RecordID(IDA string) (err error) {
 		CurrentTime: GetCurrentTime(),
 	}
 	PGDB.MakeResDB(res,IDA)
+	return nil
+}
+
+//delete the history id_infos item, only reserve the last efficient record for different client id
+func (PGDB *GormDB) ClearHistory(clientID string) error {
+	logger.Info("Begin to clear history id_infos data")
+	if err := PGDB.PgClient.Where("id_a = ?", clientID).Delete(IdInfo{}).Error; err != nil {
+		logger.Error("clear history id_infos data failed.")
+		return err
+	}
+	logger.Info("End to clear history id_infos data")
 	return nil
 }
 
@@ -407,14 +419,14 @@ func CheckValidC(idB ,idC []byte) (checkRes string){
 
 //After upload license, if license file is not valid, need to delete it
 func RemoveFile(filePath string) error {
-	commandString := fmt.Sprintf("rm -rf %s", filePath)
+/*	commandString := fmt.Sprintf("rm -rf %s", filePath)
 	isExist,_ := PathExists(filePath)
 	if ! isExist {return nil}
-	out,err:= exec.Command("/bin/bash","-c", commandString).Output()
-	if err != nil {
+	out,err:= exec.Command("/bin/bash","-c", commandString).Output()*/
+	if err := os.Remove(filePath); err!= nil {
 		return err
 	}
-	logger.Info("This is output for command remove file: ", out)
+	logger.Info("End to remove the license file.")
 	return nil
 }
 
