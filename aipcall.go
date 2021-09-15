@@ -20,40 +20,38 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	logger.Info("This is the client id generate at client: ", client.ClientID)
 	err2 := GB.RecordID(client.ClientID)
 	if err2 != nil {
-		logger.Error("Record ID error: ", err2.Error())
+		logger.Error("Record ID when register online error: ", err2.Error())
 		return err2, CommonResponse{}
 	}
-
 	clientByte, _ := json.Marshal(client)
 	serverIP := os.Getenv("ServerIP")
 	url := serverIP + RegisterRequest
-	logger.Info("This is the request url: ", url)
+	logger.Info("The register request url is: ", url)
 	httpClient := &http.Client{}
 	httpClient.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
 	}
-
 	req, err3 := http.NewRequest("POST", url, bytes.NewReader(clientByte))
 	if err3 != nil {
-		logger.Error("Request error1: ", err3.Error())
+		logger.Error("Create request for register error: ", err3.Error())
 		return err3, CommonResponse{}
 	}
 	serverResponse, err4 := httpClient.Do(req)
 	if err4 != nil {
-		logger.Error("Request error2: ", err4.Error())
+		logger.Error("Request for register error: ", err4.Error())
 		return err4, CommonResponse{}
 	}
 	result, err5 := ioutil.ReadAll(serverResponse.Body)
 	logger.Debug("This is the online register response data: ", string(result))
 	if err5 != nil {
-		logger.Error("Request error3: ", err5.Error())
+		logger.Error("Get server response error: ", err5.Error())
 		return err5, CommonResponse{}
 	}
 	err6 := json.Unmarshal(result, &responseServer)
 	if err6 != nil {
-		logger.Error("Internal error1: ", err6.Error())
+		logger.Error("Parse server response error: ", err6.Error())
 		return err6, CommonResponse{}
 	}
 
@@ -62,8 +60,8 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	}
     
 	if responseServer.Data == nil {
-		logger.Error("Internal error2 ")
-		return errors.New("Get plain data error"), CommonResponse{}
+		logger.Error("Get plain or nil data response from server.")
+		return errors.New("get plain data error"), CommonResponse{}
 	}
 	dataRes, _ := responseServer.Data.(map[string]interface{})
 	encryptedData, ok1 := dataRes["encrypteddata"].(string)
@@ -73,16 +71,15 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	}
 	err9 := GB.UpdateContent(client.ClientID, encryptedData, sigNature)
 	if err9 != nil {
-	    logger.Error("Internal error3 ")
+	    logger.Error("Update content for the id_infos item")
 		return errors.New(ServerInternalError), CommonResponse{}
 	}
 	logger.Debug("This is the string of the responseServer.Data: ", dataRes)
 	err10 := write(responseServer.Data, client)
 	if err10 != nil {
-		logger.Error("Internal error4 ")
+		logger.Error("Write error failed for online register action: ", err10.Error())
 		return errors.New(ServerInternalError), CommonResponse{}
 	}
-	
 	res := GetFileRes(GB)
 	if ! res.Value {
 		logger.Error("This upload file is in invalid")

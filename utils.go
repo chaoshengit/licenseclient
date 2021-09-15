@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"github.com/sirupsen/logrus"
 	"github.com/wonderivan/logger"
 	"io"
@@ -125,12 +124,16 @@ func write(LicenseContent interface{}, client RegisterBody) error {
 	//genTime := time.Now().Unix()
 	logger.Info("This is the file for: ", client.ClientName)
 	fileCheckRes, _  := PathExists(FilePath)
-	if fileCheckRes {return errors.New(FileAlreadyExistError)}
+	if fileCheckRes {
+		if err := RemoveFile(FilePath); err != nil {
+			logger.Error("Remove the invalid file failed when create the new file.")
+			return err
+		}
+	}
 	LicenseContentB, err1 := json.Marshal(LicenseContent)
 	if err1 != nil {
 		return err1
 	}
-
 	err2 := ioutil.WriteFile(FilePath, LicenseContentB, os.ModeAppend)
 	if err2 != nil {
 		return err2
