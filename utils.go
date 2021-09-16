@@ -238,8 +238,6 @@ func (PGDB *GormDB)VerifyClusterCode(clientID, clientDomain string) (OK string) 
 		logger.Info("This is the error when check the client id: ", err.Error())
         return BlankString
 	}
-	logger.Info("This is the clientID:", clientID)
-	logger.Info("This is the records:", records)
 	if ! IsInclude(records, clientID) {
 		logger.Error("The client id may be fake one, please check")
 		return BlankString
