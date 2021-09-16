@@ -82,7 +82,7 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 	}
 	res := GetFileRes(GB)
 	if ! res.Value {
-		logger.Error("This upload file is in invalid")
+		logger.Error("This file is invalid")
 		if err4 := RemoveFile(FilePath); err4 != nil {
 			logger.Error("Failed to handle the invalid file")
 		}

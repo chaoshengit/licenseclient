@@ -87,7 +87,7 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 		Value: false,
 	}
 
-	err,data := PGDB.ReadAndDecryptFile(FilePath)
+	err, data := PGDB.ReadAndDecryptFile(FilePath)
 	if err != nil {
 		return fres
 	}
@@ -238,7 +238,8 @@ func (PGDB *GormDB)VerifyClusterCode(clientID, clientDomain string) (OK string) 
 		logger.Info("This is the error when check the client id: ", err.Error())
         return BlankString
 	}
-
+	logger.Info("This is the clientID:", clientID)
+	logger.Info("This is the records:", records)
 	if ! IsInclude(records, clientID) {
 		logger.Error("The client id may be fake one, please check")
 		return BlankString
@@ -281,7 +282,7 @@ func (PGDB *GormDB)VerifyClusterCode(clientID, clientDomain string) (OK string) 
 }
 //Check the Valid of the file
 func VerifyValid(data string) (OK string) {
-	logger.Info("This is the data in VerifyValid: ", data)
+	logger.Info("This is the date in VerifyValid: ", data)
     T,err := time.Parse(GoStandardTime,data)
     if err != nil {
     	return BlankString
