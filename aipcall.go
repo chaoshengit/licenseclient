@@ -161,3 +161,24 @@ func (GB *GormDB)DeactivateService() error {
     logger.Info("End to deactivate Service")
 	return nil
 }
+
+//for check the register status and client service status
+func (GB *GormDB)GetRegisterInfo() RegisterInfo {
+	logger.Info("Begin to Get register Info from local site.")
+	faultInfo := RegisterInfo{
+		Status: "Deactivated",
+	}
+	err, data := GB.ReadAndDecryptFile(FilePath)
+	if err != nil {
+		logger.Error("Return deactivated because read file failed error: ", err.Error())
+		return faultInfo
+	}
+	normalInfo := RegisterInfo{
+		SN: data.SeriesNumber,
+		HardwareID: data.ClusterCode,
+		Plan: data.PartNumber,
+		ExpiredTime: data.ExpiredTime,
+	}
+	logger.Info("End to Get register Info from local site.")
+	return normalInfo
+}

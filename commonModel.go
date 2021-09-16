@@ -145,3 +145,11 @@ type HeartBeatResponse struct {
 	ClientID      string //
 	LicenseStatus string
 }
+
+type RegisterInfo struct {
+	Status        string `json:"Status"`
+	SN            string `json:"Serial Number"`
+	HardwareID    string `json:"HWID"`
+	Plan          string `json:"Plan"`
+	ExpiredTime   string `json:"Expiration Time"`
+}

@@ -552,7 +552,7 @@ func (GB *GormDB)SendHeartBeat() string {
 		logger.Error("Stop to send the heartbeat")
 		return LicenseMidStatus
 	}
-	err,data := GB.ReadAndDecryptFile(FilePath)
+	err, data := GB.ReadAndDecryptFile(FilePath)
     if err != nil {
 		logger.Error("Stop to send heartbeat because read file failed error: ", err.Error())
 		return LicenseMidStatus
