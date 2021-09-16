@@ -364,7 +364,7 @@ func (PGDB *GormDB)RegularUpdateC() {
 //Regular check the duration between current time and last time
 func (PGDB *GormDB)RegularCheckC() {
 //There has three condition 1.no record found 2.only idA  and idC there 3.all ids there.
-	err,id := PGDB.GetCRecord()
+	err, id := PGDB.GetCRecord()
 	if err == nil {
 		if id.IdC == BlankString {
 			logger.Error("IdC value error")
@@ -639,17 +639,13 @@ func LicenseCheck(db *GormDB) {
 
 //Tool func: This is the interface to regular check id_infos table
 func LicenseUpdate(db *GormDB) string {
-	ticker := time.NewTicker(10 * TDuration * time.Second)
-	defer ticker.Stop()
-	for range ticker.C {
-		logger.Info("Regular update begin")
-		if db.CheckC() {
-			db.RegularUpdateC()
-			status := db.SendHeartBeat()
-			logger.Info("Regular update end")
-			return status
+	logger.Info("Regular update begin")
+	if db.CheckC() {
+		db.RegularUpdateC()
+		status := db.SendHeartBeat()
+		logger.Info("Regular update end")
+		return status
 		}
-	}
 	logger.Info("Regular update end")
 	return LicenseMidStatus
 }
