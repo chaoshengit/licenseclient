@@ -643,7 +643,7 @@ func LicenseUpdate(db *GormDB) string {
 	if db.CheckC() {
 		db.RegularUpdateC()
 		status := db.SendHeartBeat()
-		logger.Info("Regular update end")
+		logger.Info("Regular update executed")
 		return status
 		}
 	logger.Info("Regular update end")
