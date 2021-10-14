@@ -163,7 +163,7 @@ func (GB *GormDB)DeactivateService() error {
 }
 
 //for check the register status and client service status
-func (GB *GormDB)GetRegisterInfo() RegisterInfo {
+func (GB *GormDB)GetRegisterInfo(hashString string) RegisterInfo {
 	logger.Info("Begin to Get register Info from local site.")
 	faultInfo := RegisterInfo{
 		Status: "Deactivated",
@@ -176,7 +176,7 @@ func (GB *GormDB)GetRegisterInfo() RegisterInfo {
 	normalInfo := RegisterInfo{
 		SN: data.SeriesNumber,
 		HardwareID: data.ClusterCode,
-		Plan: data.PartNumber,
+		Plan: data.HashList[hashString],
 		ExpiredTime: data.ExpiredTime,
 	}
 	logger.Info("End to Get register Info from local site.")

@@ -97,13 +97,12 @@ type FileResult struct {
 	CustomerName  string `json:"customname"`
 	ClusterCode   string `json:"clustercode"`
 	ClientDomain  string `json:"clientdomain"`
-	PartNumber    string `json:"partnumber"`
 	Version       string `json:"version"`
 	EffectiveTime string `json:"effictivetime"`
 	ExpiredTime   string `json:"expiredtime"`
 	SeriesNumber  string
 	//For hash check
-	HashList      []string
+	HashList      map[string]string
 	Description   string `json:"description"`
 }
 
