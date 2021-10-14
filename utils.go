@@ -100,7 +100,6 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 	logger.Info("This is the result of VerifyData:", res)
 	if res == TrueString {
         //_ = PGDB.UpdateUseState(data.ClusterCode)
-        tres.PartNumber = data.PartNumber
         tres.HashList   = data.HashList
 		return tres
 	}

@@ -88,8 +88,7 @@ type CheckRes struct {
 	Value         bool   `json:"value"`
 	RegularCheck  string `json:"regular_check"`
 	GetResTime    int64  `json:"get_res_time"`
-	PartNumber    string `json:"part_number"`
-	HashList      []string
+	HashList      map[string]string
 }
 
 type FileResult struct {
