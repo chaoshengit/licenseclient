@@ -88,6 +88,7 @@ func GetFileRes(PGDB *GormDB) CheckRes {
 	}
 
 	err, data := PGDB.ReadAndDecryptFile(FilePath)
+	logger.Info("This is the data in GetFileRes: ", data)
 	if err != nil {
 		return fres
 	}
