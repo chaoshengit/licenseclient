@@ -24,7 +24,7 @@ func (GB *GormDB)RegisterCall(client RegisterBody) (error, CommonResponse) {
 		return err2, CommonResponse{}
 	}
 	clientByte, _ := json.Marshal(client)
-	serverIP := os.Getenv("ServerIP")
+	serverIP := os.Getenv("LicenseServerIP")
 	url := serverIP + RegisterRequest
 	logger.Info("The register request url is: ", url)
 	httpClient := &http.Client{}

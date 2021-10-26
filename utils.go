@@ -546,7 +546,7 @@ func (GB *GormDB)SendHeartBeat() string {
 	logger.Info("Begin to send the heartbeat.")
 	var responseBody HBReturnBody
 	var responseData HeartBeatResponse
-	serverIP := os.Getenv("ServerIP")
+	serverIP := os.Getenv("LicenseServerIP")
 	if ! CheckConnect(serverIP) {
 		logger.Error("Stop to send the heartbeat")
 		return LicenseMidStatus

@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c28ce175-e2ca-4ce7-afe1-1f5fdb810e6e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aipcall.go" beforeDir="false" afterPath="$PROJECT_DIR$/aipcall.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,8 +17,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/aipcall.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="116" column="7" lean-forward="true" selection-start-line="116" selection-start-column="7" selection-end-line="116" selection-end-column="7" />
+            <state relative-caret-position="422">
+              <caret line="33" column="10" lean-forward="true" selection-start-line="33" selection-start-column="10" selection-end-line="33" selection-end-column="10" />
               <folding>
                 <element signature="e#23#146#0" expanded="true" />
               </folding>
@@ -27,7 +29,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/commonModel.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="384">
+            <state relative-caret-position="1496">
               <caret line="98" column="11" selection-start-line="98" selection-start-column="4" selection-end-line="98" selection-end-column="11" />
             </state>
           </provider>
@@ -36,8 +38,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/db.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="79" column="5" lean-forward="true" selection-start-line="79" selection-start-column="5" selection-end-line="79" selection-end-column="5" />
+            <state relative-caret-position="-1178">
+              <caret line="31" column="37" lean-forward="true" selection-start-line="31" selection-start-column="37" selection-end-line="31" selection-end-column="37" />
+              <folding>
+                <element signature="e#23#124#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -45,7 +50,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/go/src/github.com/jinzhu/gorm/main.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="76">
+            <state relative-caret-position="361">
               <caret line="28" column="16" selection-start-line="28" selection-start-column="16" selection-end-line="28" selection-end-column="16" />
             </state>
           </provider>
@@ -63,8 +68,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/utils.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="432">
-              <caret line="89" column="50" lean-forward="true" selection-start-line="89" selection-start-column="50" selection-end-line="89" selection-end-column="50" />
+            <state relative-caret-position="460">
+              <caret line="558" column="26" lean-forward="true" selection-start-line="558" selection-start-column="26" selection-end-line="558" selection-end-column="26" />
             </state>
           </provider>
         </entry>
@@ -72,7 +77,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://D:/Go/src/io/ioutil/ioutil.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1615">
+            <state relative-caret-position="831">
               <caret line="91" column="29" selection-start-line="91" selection-start-column="29" selection-end-line="91" selection-end-column="29" />
             </state>
           </provider>
@@ -89,21 +94,13 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>This is the online register response data</find>
-      <find>This is the client id generate at client</find>
-      <find>VerifySN</find>
-      <find>Failed to handle the invalid file</find>
-      <find>Failed to handle the previous invalid license file</find>
-      <find>Obtain the content error</find>
       <find>This upload file is in invalid</find>
-      <find>Begin to phrase the license file</find>
       <find>This is the file for</find>
       <find>The client id may be fake one, please check</find>
       <find>This is the result of result1</find>
       <find>This is the data in VerifyValid</find>
       <find>This is the clientID</find>
       <find>Parse the server response data error</find>
-      <find>This is the request url for heartbeat</find>
       <find>IdB value error</find>
       <find>IdB</find>
       <find>LicenseUpdate</find>
@@ -118,7 +115,15 @@
       <find>num2char</find>
       <find>This is the error when check the client id</find>
       <find>This is the result of VerifyData</find>
+      <find>This is the request url for heartbeat</find>
+      <find>he client id may be fake one, please check</find>
+      <find>insertCtoDB</find>
+      <find>RecordID</find>
+      <find>Begin to phrase the license file</find>
       <find>GetFileRes</find>
+      <find>This is the time string</find>
+      <find>VerifyCall</find>
+      <find>ServerIP</find>
     </findStrings>
   </component>
   <component name="GOROOT" path="D:\Go" />
@@ -128,11 +133,11 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/db.go" />
-        <option value="$PROJECT_DIR$/aipcall.go" />
         <option value="$PROJECT_DIR$/commonModel.go" />
         <option value="$PROJECT_DIR$/authcode.go" />
+        <option value="$PROJECT_DIR$/db.go" />
         <option value="$PROJECT_DIR$/utils.go" />
+        <option value="$PROJECT_DIR$/aipcall.go" />
       </list>
     </option>
   </component>
@@ -188,7 +193,7 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18976545" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19402985" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -214,27 +219,24 @@
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/authcode.go" />
+    <entry file="file://$USER_HOME$/go/src/github.com/jinzhu/gorm/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="361">
+          <caret line="28" column="16" selection-start-line="28" selection-start-column="16" selection-end-line="28" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/commonModel.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1496">
+          <caret line="98" column="11" selection-start-line="98" selection-start-column="4" selection-end-line="98" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://D:/Go/src/io/ioutil/ioutil.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1615">
+        <state relative-caret-position="831">
           <caret line="91" column="29" selection-start-line="91" selection-start-column="29" selection-end-line="91" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/db.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="79" column="5" lean-forward="true" selection-start-line="79" selection-start-column="5" selection-end-line="79" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/aipcall.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="116" column="7" lean-forward="true" selection-start-line="116" selection-start-column="7" selection-end-line="116" selection-end-column="7" />
-          <folding>
-            <element signature="e#23#146#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -245,24 +247,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/go/src/github.com/jinzhu/gorm/main.go">
+    <entry file="file://$PROJECT_DIR$/db.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="28" column="16" selection-start-line="28" selection-start-column="16" selection-end-line="28" selection-end-column="16" />
+        <state relative-caret-position="-1178">
+          <caret line="31" column="37" lean-forward="true" selection-start-line="31" selection-start-column="37" selection-end-line="31" selection-end-column="37" />
+          <folding>
+            <element signature="e#23#124#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/commonModel.go">
+    <entry file="file://$PROJECT_DIR$/aipcall.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="384">
-          <caret line="98" column="11" selection-start-line="98" selection-start-column="4" selection-end-line="98" selection-end-column="11" />
+        <state relative-caret-position="422">
+          <caret line="33" column="10" lean-forward="true" selection-start-line="33" selection-start-column="10" selection-end-line="33" selection-end-column="10" />
+          <folding>
+            <element signature="e#23#146#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/utils.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="89" column="50" lean-forward="true" selection-start-line="89" selection-start-column="50" selection-end-line="89" selection-end-column="50" />
+        <state relative-caret-position="460">
+          <caret line="558" column="26" lean-forward="true" selection-start-line="558" selection-start-column="26" selection-end-line="558" selection-end-column="26" />
         </state>
       </provider>
     </entry>
