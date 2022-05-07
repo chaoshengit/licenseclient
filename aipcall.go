@@ -116,10 +116,6 @@ func (GB *GormDB)GenClientIDCall() (error, CommonResponse) {
 		return errors.New(ClientRequestError), CommonResponse{}
 	}*/
 	ClientID := GenRcodeOffline()
-	err2 := GB.RecordID(ClientID)
-	if err2 != nil {
-		return err2, CommonResponse{}
-	}
 	response := CommonResponse{
 		Data: ClientID,
 	}
